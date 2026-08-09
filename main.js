@@ -1012,6 +1012,16 @@ function update() {
       let yawDiff = reqYaw - physics.yaw;
       yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
       
+      // User's trick: offset the target by 5 degrees (deadband) to prevent overshooting
+      const offset = 5 * Math.PI / 180;
+      if (yawDiff > offset) {
+        yawDiff -= offset;
+      } else if (yawDiff < -offset) {
+        yawDiff += offset;
+      } else {
+        yawDiff = 0;
+      }
+      
       // AP Bank (Smooth P-Controller to damp oscillation)
       const Kp = (flightSequence === 'LANDING') ? 0.3 : ((flightSequence === 'APPROACH') ? 0.6 : 1.0);
       const maxBank = (flightSequence === 'LANDING') ? Math.PI/12 : ((flightSequence === 'APPROACH') ? Math.PI/8 : Math.PI/4);
