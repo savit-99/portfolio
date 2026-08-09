@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Savit Sharma - Portfolio</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div id="static-portfolio" class="hidden">
+      <div class="static-header">
+        <h1>Savit Sharma</h1>
+        <p>>_ PORTFOLIO DATA TERMINAL</p>
+        <button id="btn-back-to-fly" onclick="document.getElementById('static-portfolio').classList.add('hidden'); document.getElementById('static-portfolio').style.display='none'; document.getElementById('intro-screen').classList.remove('hidden'); document.getElementById('intro-screen').style.display='flex';">RETURN TO MAIN MENU</button>
+      </div>
+      <div id="static-content"></div>
+    </div>
+    <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui-layer">
+      <div id="intro-screen">
+        <h1>PORTFOLIO_SYSTEM.EXE</h1>
+        <p>AWAITING PILOT INPUT...</p>
+        <div class="mode-select" style="display: flex; gap: 20px; margin-top: 30px;">
+          <button id="btn-static" class="mission-btn">STANDARD PORTFOLIO</button>
+          <button id="btn-fly" class="mission-btn" style="color: #00ffff; border-color: #00ffff; box-shadow: 0 0 10px #00ffff;">LET US FLY CAPTAIN!!</button>
+        </div>
+      </div>
+
+
+      <div id="ui-overlay" class="hidden">
+        <div id="terminal-window">
+          <div class="terminal-header">
+            <span class="terminal-title">system_info.exe</span>
+            <button id="close-btn">[X]</button>
+          </div>
+          <div id="terminal-content" class="terminal-body">
+            <!-- Content injected here -->
+          </div>
+        </div>
+      </div>
+
+      <div id="radar-overlay" class="hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 20, 0, 0.9); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="width: 80vw; height: 80vh; border: 2px solid #00ff00; box-shadow: 0 0 20px #00ff00; position: relative;">
+          <div class="terminal-header" style="background: #003300; border-bottom: 2px solid #00ff00; padding: 10px;">
+            <span class="terminal-title" style="color: #00ff00;">GLOBAL_RADAR_SYS.exe</span>
+            <button id="close-radar-btn" style="float: right; background: none; border: none; color: #00ff00; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.2rem;">[X]</button>
+          </div>
+          <canvas id="radar-canvas" style="width: 100%; height: calc(100% - 40px); background: #001100;"></canvas>
+        </div>
+      </div>
+      <div id="crash-screen" class="hidden">
+        <h1>SYSTEM FAILURE</h1>
+        <p>CATASTROPHIC AIRFRAME DAMAGE DETECTED</p>
+        <p style="color: #ffaa00; font-family: 'Fira Code', monospace; margin-top: 20px;">SYSTEM REBOOTING...</p>
+      </div>
+
+      <div id="atc-box">
+        ATC: SELECT DESTINATION (TOP RIGHT) THEN PRESS [F] OR INITIATE TAKEOFF
+      </div>
+      <div id="dest-cue" class="hidden">SELECT DESTINATION ↗</div>
+      <nav id="corner-nav">
+        <button data-zone="about">ABOUT_ME</button>
+        <button data-zone="education">EDUCATION</button>
+        <button data-zone="experience">EXPERIENCE</button>
+        <button data-zone="projects">PROJECTS</button>
+        <button data-zone="skills">SKILLS</button>
+        <button id="radar-nav-btn" style="color: #ffaa00; border-color: #ffaa00;">[RADAR NAV]</button>
+      </nav>
+      <div id="hud">
+        <div id="gforce-meter">G-LD: <span id="gforce-text">1.0</span> G</div>
+        <div id="ap-indicator">AP: OFF [F]</div>
+        <div id="loc-indicator">LOC: OFF [L]</div>
+        <div id="gear-indicator">GEAR: <span id="gear-text" style="color: #00ff00;">DOWN [G]</span></div>
+        <div id="surface-indicator" style="color: #00ff00; font-weight: bold; margin-top: 5px;">[SURFACE: AIRBORNE]</div>
+        <button id="btn-seq" class="mission-btn" style="margin-top: 10px; padding: 10px; font-size: 0.9em; display: block; border-color: #00ffff; color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);">INITIATE TAKEOFF</button>
+      </div>
+      <div id="stall-warning" class="hidden">STALL WARNING</div>
+      <div id="gpws-alert" class="hidden">TERRAIN PULL UP</div>
+
+      <div id="flight-controls">
+        <p>>_ MANUAL OVERRIDE</p>
+        <p>[W/S] PITCH DOWN / UP</p>
+        <p>[A/D] BANK LEFT / RIGHT</p>
+        <p>[SPACE] THROTTLE UP</p>
+        <p>[SHIFT] THROTTLE DOWN</p>
+      </div>
+      <div id="waypoints-container"></div>
+      
+      <div id="nav-lock-indicator" class="hidden">
+        [ NAV-LOCK ACQUIRED: <span id="nav-lock-text">NONE</span> ]
+      </div>
+
+      <div id="cockpit-panel" class="hidden">
+        <div class="dial" id="dial-speed">
+          <div class="dial-bg"></div>
+          <div class="dial-needle" id="needle-speed"></div>
+          <div class="dial-readout">
+            <span class="dial-val" id="dial-speed-val">0</span>
+            <span class="dial-unit">KTS</span>
+          </div>
+        </div>
+        <div class="dial" id="dial-heading">
+          <div class="dial-bg compass-bg"></div>
+          <div class="dial-needle compass-needle" id="needle-heading"></div>
+          <div class="dial-readout">
+            <span class="dial-val" id="dial-heading-val">000</span>
+            <span class="dial-unit">HDG</span>
+          </div>
+        </div>
+        <div class="dial" id="dial-alt">
+          <div class="dial-bg"></div>
+          <div class="dial-needle" id="needle-alt-100"></div>
+          <div class="dial-needle dial-needle-short" id="needle-alt-1000"></div>
+          <div class="dial-readout">
+            <span class="dial-val" id="dial-alt-val">0</span>
+            <span class="dial-unit">FT</span>
+          </div>
+        </div>
+        
+        <div id="ap-master-container">
+          <div id="ap-master-label">AUTOPILOT</div>
+          <button id="btn-ap-toggle">OFF</button>
+        </div>
+      </div>
+
+    </div> <!-- End UI Layer -->
+    </div>
+    
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

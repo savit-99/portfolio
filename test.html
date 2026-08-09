@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<body>
+  <div id="static-portfolio" class="hidden">
+    <button id="btn-back-to-fly">BOOT FLIGHT SIMULATOR</button>
+  </div>
+  <div id="start-screen" class="hidden">
+    Start Screen
+  </div>
+  <script>
+    const btn = document.getElementById('btn-back-to-fly');
+    btn.addEventListener('click', () => {
+      document.getElementById('static-portfolio').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      console.log('clicked', document.getElementById('start-screen').className);
+    });
+  </script>
+</body>
+</html>
