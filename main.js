@@ -1075,19 +1075,20 @@ function update() {
           physics.pitch = 0; // Keep nose down during ground roll
         }
       } else if (flightSequence === 'CRUISE') {
-        physics.speed = Math.min(physics.maxSpeed, Math.max(12.0, physics.speed + 5 * delta));
+        const targetSpeed = 30.0; // 300 kts
+        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
       } else if (flightSequence === 'APPROACH' || flightSequence === 'STABILIZED_APPROACH') {
-        const targetSpeed = (globalAlongTrack < -35000) ? 50 : 20; // 500 kts until 3000m from threshold, then 200 kts
+        const targetSpeed = (globalAlongTrack < -35000) ? 30.0 : 21.5; // 300 kts transitioning to 215 kts
         physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
         if (currentAlt > zone.elevation + 0.5) {
-          // Final approach glideslope
-          physics.speed = physics.speed > 21.5 ? Math.max(21.5, physics.speed - 5 * delta) : Math.min(21.5, physics.speed + 5 * delta);
+          // Final approach glideslope (150 kts)
+          physics.speed = physics.speed > 15.0 ? Math.max(15.0, physics.speed - 5 * delta) : Math.min(15.0, physics.speed + 5 * delta);
           let p = altDiff * 0.002;
           if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
@@ -1095,8 +1096,9 @@ function update() {
           // Touchdown: taxi to destination then brake
           playerGroup.position.y = zone.elevation; // Force exactly onto ground to trigger RUNWAY surface
           if (globalAlongTrack < 0) {
-            if (physics.speed < 10) physics.speed = Math.min(10, physics.speed + 15 * delta);
-            else if (physics.speed > 10) physics.speed = Math.max(10, physics.speed - 15 * delta);
+            // Taxi speed 130 kts
+            if (physics.speed < 13.0) physics.speed = Math.min(13.0, physics.speed + 15 * delta);
+            else if (physics.speed > 13.0) physics.speed = Math.max(13.0, physics.speed - 15 * delta);
           } else {
             physics.speed = Math.max(0, physics.speed - 15 * delta);
           }
