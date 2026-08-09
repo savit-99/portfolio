@@ -923,7 +923,7 @@ function update() {
       globalAlongTrack = alongTrack;
       globalCrossTrack = crossTrack;
       
-      const lookahead = Math.max(15000, Math.min(40000, Math.abs(alongTrack) * 0.8));
+      const lookahead = Math.max(2000, Math.min(40000, Math.abs(alongTrack) * 0.5));
       const targetAlongTrack = alongTrack + lookahead;
       
       // Target Touchdown Zone exactly 2000 units past threshold (alongTrack = -13000)
