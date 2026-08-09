@@ -1191,8 +1191,8 @@ function update() {
     const alt = Math.floor(currentAlt);
     
     // Calculate heading 0-359 degrees. Yaw is around Y axis.
-    // Calculate heading 0-359 degrees. Yaw is around Y axis.
-    let hdgDeg = Math.floor((physics.yaw * 180 / Math.PI) % 360);
+    // Calculate heading 0-359 degrees. Negate yaw so right turns increase heading.
+    let hdgDeg = Math.floor((-physics.yaw * 180 / Math.PI) % 360);
     if (hdgDeg < 0) hdgDeg += 360;
     const hdgStr = hdgDeg.toString().padStart(3, '0');
     const currentKts = Math.floor(physics.speed * 10);
@@ -1216,7 +1216,7 @@ function update() {
       const targetDist = globalDistToZone;
       
       let reqYaw = Math.atan2(-dx, -dz);
-      let reqHdg = Math.floor((reqYaw * 180 / Math.PI) % 360);
+      let reqHdg = Math.floor((-reqYaw * 180 / Math.PI) % 360);
       if (reqHdg < 0) reqHdg += 360;
       const reqHdgStr = reqHdg.toString().padStart(3, '0');
       
