@@ -872,6 +872,10 @@ function update() {
       globalAlongTrack = alongTrack;
       globalCrossTrack = crossTrack;
       const lookahead = Math.max(1000, Math.min(20000, Math.abs(alongTrack) * 0.5));
+      if (flightSequence === 'LANDING' && alongTrack > 25000) {
+        flightSequence = 'CRUISE';
+        if (typeof apIndicator !== 'undefined' && autopilotEngaged) apIndicator.textContent = 'AP: CRUISE [F]';
+      }
       const targetAlongTrack = (flightSequence === 'CRUISE') ? Math.min(-80000, alongTrack + lookahead) : (alongTrack + lookahead);
       globalTargetX = rx + targetAlongTrack * vx;
       globalTargetZ = rz + targetAlongTrack * vz;
