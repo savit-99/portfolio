@@ -1079,7 +1079,7 @@ function update() {
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
       } else if (flightSequence === 'APPROACH' || flightSequence === 'STABILIZED_APPROACH') {
-        const targetSpeed = (globalAlongTrack < -35000) ? 50 : 30; // 500 kts until 3000m from threshold, then 300 kts
+        const targetSpeed = (globalAlongTrack < -35000) ? 50 : 20; // 500 kts until 3000m from threshold, then 200 kts
         physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
