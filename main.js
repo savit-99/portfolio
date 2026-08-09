@@ -1015,11 +1015,15 @@ function update() {
           physics.speed = Math.max(physics.minSpeed + 5, physics.speed - 5 * delta);
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, altDiff * 0.001));
         } else {
-          // Touchdown: flare and brake
-          // Touchdown: flare and brake
-          physics.speed = Math.max(0, physics.speed - 15 * delta);
+          // Touchdown: taxi to destination then brake
+          if (globalAlongTrack < 0) {
+            if (physics.speed < 10) physics.speed = Math.min(10, physics.speed + 15 * delta);
+            else if (physics.speed > 10) physics.speed = Math.max(10, physics.speed - 15 * delta);
+          } else {
+            physics.speed = Math.max(0, physics.speed - 15 * delta);
+          }
           physics.pitch = 0; // Lock to ground to prevent bounce
-          if (physics.speed < 2) {
+          if (physics.speed < 2 && globalAlongTrack >= 0) {
             autopilotEngaged = false;
             flightSequence = 'NONE';
             btnSeq.textContent = 'INITIATE TAKEOFF';
@@ -1132,8 +1136,9 @@ function update() {
     playerGroup.rotation.x = physics.pitch;
     playerGroup.rotation.z = physics.roll;
     
-    // Move Forward in the direction it's pointing
-    playerGroup.translateZ(-physics.speed * 60 * delta);
+    // Move Forward in the direction it's pointing (1 knot = 1.68781 ft/s, 1 unit = 1 ft)
+    const exactKts = physics.speed * 10;
+    playerGroup.translateZ(-exactKts * 1.68781 * delta);
     
     // Map & Floor boundaries
     playerGroup.position.x = Math.max(-149900, Math.min(149900, playerGroup.position.x));
@@ -1465,8 +1470,8 @@ function drawDialMarks(dialId, maxVal, sweepAngle, tickStep, labelStep, options 
   dial.querySelector('.dial-bg').appendChild(svg);
 }
 
-// Speed: 0 to 250, 270 deg sweep
-drawDialMarks('dial-speed', 250, 270, 10, 50, { offsetAngle: 135 });
+// Speed: 0 to 750, 270 deg sweep
+drawDialMarks('dial-speed', 750, 270, 30, 150, { offsetAngle: 135 });
 
 // Heading: 0 to 360, 360 deg sweep
 drawDialMarks('dial-heading', 360, 360, 10, 30, { 
