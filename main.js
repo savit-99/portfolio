@@ -976,16 +976,21 @@ function update() {
       let yawDiff = reqYaw - physics.yaw;
       yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
       
-      // AP Bank
+      // AP Bank (PD Controller to damp oscillation)
+      if (typeof window.lastYawDiff === 'undefined') window.lastYawDiff = 0;
+      let yawRate = (yawDiff - window.lastYawDiff) / delta;
+      window.lastYawDiff = yawDiff;
+      
+      const Kp = (flightSequence === 'LANDING') ? 0.5 : ((flightSequence === 'APPROACH') ? 0.8 : 1.5);
+      const Kd = (flightSequence === 'LANDING') ? 0.2 : ((flightSequence === 'APPROACH') ? 0.3 : 0.5);
+      const maxBank = (flightSequence === 'LANDING') ? Math.PI/12 : ((flightSequence === 'APPROACH') ? Math.PI/8 : Math.PI/4);
+
       if (flightSequence === 'TAKEOFF' || targetDist < 300) {
         physics.roll *= 0.95;
         physics.yaw += yawDiff * 2.0 * delta;
-      } else if (flightSequence === 'LANDING') {
-        physics.roll = Math.max(-Math.PI/12, Math.min(Math.PI/12, yawDiff * 0.5)); // Very gentle corrections on landing
-      } else if (flightSequence === 'APPROACH') {
-        physics.roll = Math.max(-Math.PI/8, Math.min(Math.PI/8, yawDiff * 0.8)); // Gentler banking
       } else {
-        physics.roll = Math.max(-Math.PI/4, Math.min(Math.PI/4, yawDiff * 1.5));
+        let desiredRoll = yawDiff * Kp + yawRate * Kd;
+        physics.roll = Math.max(-maxBank, Math.min(maxBank, desiredRoll));
       }
       
       // Auto-deploy gear
@@ -1026,7 +1031,7 @@ function update() {
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
-        if (currentAlt > zone.elevation + 3) {
+        if (currentAlt > zone.elevation + 0.1) {
           // Final approach glideslope
           physics.speed = physics.speed > 21.5 ? Math.max(21.5, physics.speed - 5 * delta) : Math.min(21.5, physics.speed + 5 * delta);
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, altDiff * 0.001));
@@ -1061,9 +1066,14 @@ function update() {
         let yawDiff = reqYaw - physics.yaw;
         yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
         
+        if (typeof window.lastManYawDiff === 'undefined') window.lastManYawDiff = 0;
+        let yawRate = (yawDiff - window.lastManYawDiff) / delta;
+        window.lastManYawDiff = yawDiff;
+        
         const targetDist = Math.hypot(dx, dz);
         if (targetDist > 300) {
-          physics.roll = Math.max(-Math.PI/4, Math.min(Math.PI/4, yawDiff * 2));
+          let desiredRoll = yawDiff * 1.5 + yawRate * 0.5;
+          physics.roll = Math.max(-Math.PI/4, Math.min(Math.PI/4, desiredRoll));
         } else {
           physics.roll *= 0.95;
         }
