@@ -1189,7 +1189,7 @@ function update() {
     
     // Update Cockpit Dials
     if (dialSpeedVal) dialSpeedVal.textContent = currentKts;
-    if (needleSpeed) needleSpeed.style.transform = `rotate(${Math.min(270, (currentKts / 250) * 270) - 135}deg)`;
+    if (needleSpeed) needleSpeed.style.transform = `rotate(${Math.min(270, (currentKts / 750) * 270) - 135}deg)`;
     
     if (dialHeadingVal) dialHeadingVal.textContent = hdgStr;
     if (needleHeading) needleHeading.style.transform = `rotate(${hdgDeg}deg)`;
