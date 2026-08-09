@@ -31,6 +31,7 @@ let flightSequence = 'NONE';
 let localizerEngaged = false;
 let gearDown = true;
 let activeDestination = null;
+let currentWaypointIndex = 0;
 let lastOpenedZone = null;
 let isOnRunway = false;
 let offRoadTimer = 0;
@@ -287,12 +288,22 @@ scene.add(particles);
 
 // Zones Data
 const zonesData = [
-  { id: 'start', title: 'START RUNWAY', content: '', x: 0, z: 0, elevation: 0, angle: 0 },
-  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 50000, z: -80000, elevation: 0, angle: 0 },
-  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 0, angle: Math.PI / 4 },
-  { id: 'experience', title: 'WORK_EXPERIENCE.EXE', content: portfolioContent.experience, x: -40000, z: -40000, elevation: 0, angle: Math.PI / 2 },
-  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 90000, z: -100000, elevation: 0, angle: -Math.PI / 4 },
-  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 100000, z: -20000, elevation: 0, angle: -Math.PI / 2 }
+  { id: 'start', title: 'START RUNWAY', content: '', x: 0, z: 0, elevation: 0, angle: 0, waypoints: [] },
+  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 50000, z: -80000, elevation: 0, angle: 0, waypoints: [
+      {x: 0, z: -20000, alt: 1000}, {x: 25000, z: -40000, alt: 1000}, {x: 50000, z: -55000, alt: 1000}
+  ]},
+  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 0, angle: Math.PI / 4, waypoints: [
+      {x: 0, z: -20000, alt: 1000}, {x: -30000, z: -50000, alt: 1000}, {x: -52322, z: -92322, alt: 1000}
+  ]},
+  { id: 'experience', title: 'WORK_EXPERIENCE.EXE', content: portfolioContent.experience, x: -40000, z: -40000, elevation: 0, angle: Math.PI / 2, waypoints: [
+      {x: 0, z: -20000, alt: 1000}, {x: -15000, z: -40000, alt: 1000}
+  ]},
+  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 90000, z: -100000, elevation: 0, angle: -Math.PI / 4, waypoints: [
+      {x: 0, z: -20000, alt: 1000}, {x: 40000, z: -50000, alt: 1000}, {x: 72322, z: -82322, alt: 1000}
+  ]},
+  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 100000, z: -20000, elevation: 0, angle: -Math.PI / 2, waypoints: [
+      {x: 0, z: -10000, alt: 1000}, {x: 50000, z: -20000, alt: 1000}, {x: 75000, z: -20000, alt: 1000}
+  ]}
 ];
 
 // Global Illumination
@@ -684,6 +695,7 @@ document.querySelectorAll('#corner-nav button').forEach(btn => {
       
       const approachAngle = dist1 < dist2 ? zoneData.angle : oppAngle;
       activeDestination = { ...zoneData, approachAngle };
+      currentWaypointIndex = 0;
       destCue.classList.add('hidden');
       
       navLockText.textContent = zoneData.title;
@@ -892,23 +904,52 @@ function update() {
       const crossTrack = dx * vz - dz * vx;
       globalAlongTrack = alongTrack;
       globalCrossTrack = crossTrack;
+      
       const lookahead = Math.max(15000, Math.min(40000, Math.abs(alongTrack) * 0.8));
-      if (flightSequence === 'LANDING' && alongTrack > 25000) {
-        flightSequence = 'CRUISE';
-        if (typeof apIndicator !== 'undefined' && autopilotEngaged) apIndicator.textContent = 'AP: CRUISE [F]';
-      }
-      const targetAlongTrack = (flightSequence === 'CRUISE') ? Math.min(-80000, alongTrack + lookahead) : (alongTrack + lookahead);
-      globalTargetX = rx + targetAlongTrack * vx;
-      globalTargetZ = rz + targetAlongTrack * vz;
+      const targetAlongTrack = alongTrack + lookahead;
       
       // Target Touchdown Zone exactly 2000 units past threshold (alongTrack = -23000)
       const distToTDZ = Math.max(0, -alongTrack - 23000);
-      globalTargetAlt = zone.elevation + (distToTDZ / 20000) * 1000;
+      const glideTargetAlt = zone.elevation + (distToTDZ / 20000) * 1000;
+      
+      if (flightSequence === 'CRUISE') {
+        const waypoints = zone.waypoints;
+        if (currentWaypointIndex < waypoints.length) {
+           const wp = waypoints[currentWaypointIndex];
+           globalTargetX = wp.x;
+           globalTargetZ = wp.z;
+           globalTargetAlt = wp.alt;
+           
+           // If we are close enough to the waypoint, sequence to the next one
+           if (Math.hypot(playerGroup.position.x - wp.x, playerGroup.position.z - wp.z) < 20000) {
+             currentWaypointIndex++;
+           }
+        } else {
+           // Passed all waypoints, track runway centerline
+           globalTargetX = rx + targetAlongTrack * vx;
+           globalTargetZ = rz + targetAlongTrack * vz;
+           globalTargetAlt = Math.max(1000, glideTargetAlt);
+           
+           // Transition to APPROACH if we are getting close and aligned
+           if (alongTrack > -80000) {
+             flightSequence = 'APPROACH';
+             if (typeof apIndicator !== 'undefined' && autopilotEngaged) apIndicator.textContent = 'AP: APPROACH [F]';
+           }
+        }
+      } else {
+        // APPROACH or LANDING
+        globalTargetX = rx + targetAlongTrack * vx;
+        globalTargetZ = rz + targetAlongTrack * vz;
+        globalTargetAlt = glideTargetAlt;
+      }
     }
 
     // --- AUTOPILOT LOGIC ---
     if (autopilotEngaged) {
-      apIndicator.textContent = 'AP: ' + flightSequence + ' [F]';
+          activeDestination = z;
+          currentWaypointIndex = 0; // Reset waypoints for the new route
+          flightSequence = (playerGroup.position.y <= 10) ? 'TAKEOFF' : 'CRUISE';
+          if (autopilotEngaged) apIndicator.textContent = 'AP: ' + flightSequence + ' [F]';
       const zone = activeDestination || { x: 0, z: 0, elevation: 0, angle: 0, approachAngle: 0 };
       let targetX, targetZ, targetAlt;
       
@@ -1224,16 +1265,39 @@ function update() {
     if (activeDestination) {
       if (flightSequence === 'APPROACH' || flightSequence === 'LANDING' || flightSequence === 'CRUISE') {
         approachPathGroup.visible = true;
-        for (let i = 0; i < 20; i++) {
-          const box = approachBoxes[i];
-          const dist = (i + 1) * 4000 + 25000;
-          const yTarget = activeDestination.elevation + Math.max(0, (dist - 23000) / 20000 * 1000);
-          box.position.set(
-            activeDestination.x - Math.sin(activeDestination.approachAngle) * dist, 
-            yTarget, 
-            activeDestination.z - Math.cos(activeDestination.approachAngle) * dist
-          );
-          box.rotation.y = activeDestination.approachAngle;
+        
+        if (flightSequence === 'CRUISE' && activeDestination.waypoints && currentWaypointIndex < activeDestination.waypoints.length) {
+          // Draw boxes along the current waypoint leg
+          let prevX = 0, prevZ = 0, prevAlt = 1000;
+          if (currentWaypointIndex > 0) {
+            const pWP = activeDestination.waypoints[currentWaypointIndex - 1];
+            prevX = pWP.x; prevZ = pWP.z; prevAlt = pWP.alt;
+          }
+          const currWP = activeDestination.waypoints[currentWaypointIndex];
+          const dx = currWP.x - prevX;
+          const dz = currWP.z - prevZ;
+          const dAlt = currWP.alt - prevAlt;
+          const legAngle = Math.atan2(dx, dz); // angle of this leg
+          
+          for (let i = 0; i < 20; i++) {
+            const box = approachBoxes[i];
+            const t = (i + 1) / 20; // 0.05 to 1.0
+            box.position.set(prevX + dx * t, prevAlt + dAlt * t, prevZ + dz * t);
+            box.rotation.y = legAngle;
+          }
+        } else {
+          // Final Approach - draw boxes along the runway extended centerline
+          for (let i = 0; i < 20; i++) {
+            const box = approachBoxes[i];
+            const dist = (i + 1) * 4000 + 25000;
+            const yTarget = activeDestination.elevation + Math.max(0, (dist - 23000) / 20000 * 1000);
+            box.position.set(
+              activeDestination.x - Math.sin(activeDestination.approachAngle) * dist, 
+              yTarget, 
+              activeDestination.z - Math.cos(activeDestination.approachAngle) * dist
+            );
+            box.rotation.y = activeDestination.approachAngle;
+          }
         }
       } else {
         approachPathGroup.visible = false;
