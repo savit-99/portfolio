@@ -289,18 +289,18 @@ scene.add(particles);
 // Zones Data
 const zonesData = [
   { id: 'start', title: 'START RUNWAY', content: '', x: 0, z: 0, elevation: 0, angle: 0, waypoints: [] },
-  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 0, z: -80000, elevation: 0, angle: 0, waypoints: [] },
-  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 0, angle: Math.PI / 4, waypoints: [
-      {x: 0, z: -20000, alt: 1000}, {x: -30000, z: -50000, alt: 1000}, {x: -52322, z: -92322, alt: 1000}
+  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 0, z: -40000, elevation: 0, angle: 0, waypoints: [] },
+  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -35000, z: -55000, elevation: 0, angle: Math.PI / 4, waypoints: [
+      {x: 0, z: -10000, alt: 1000}, {x: -15000, z: -25000, alt: 1000}, {x: -26161, z: -46161, alt: 1000}
   ]},
-  { id: 'experience', title: 'WORK_EXPERIENCE.EXE', content: portfolioContent.experience, x: -40000, z: -40000, elevation: 0, angle: Math.PI / 2, waypoints: [
-      {x: 0, z: -20000, alt: 1000}, {x: -15000, z: -40000, alt: 1000}
+  { id: 'experience', title: 'WORK_EXPERIENCE.EXE', content: portfolioContent.experience, x: -20000, z: -20000, elevation: 0, angle: Math.PI / 2, waypoints: [
+      {x: 0, z: -10000, alt: 1000}, {x: -7500, z: -20000, alt: 1000}
   ]},
-  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 90000, z: -100000, elevation: 0, angle: -Math.PI / 4, waypoints: [
-      {x: 0, z: -20000, alt: 1000}, {x: 40000, z: -50000, alt: 1000}, {x: 72322, z: -82322, alt: 1000}
+  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 45000, z: -50000, elevation: 0, angle: -Math.PI / 4, waypoints: [
+      {x: 0, z: -10000, alt: 1000}, {x: 20000, z: -25000, alt: 1000}, {x: 36161, z: -41161, alt: 1000}
   ]},
-  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 100000, z: -20000, elevation: 0, angle: -Math.PI / 2, waypoints: [
-      {x: 0, z: -10000, alt: 1000}, {x: 50000, z: -20000, alt: 1000}, {x: 75000, z: -20000, alt: 1000}
+  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 50000, z: -10000, elevation: 0, angle: -Math.PI / 2, waypoints: [
+      {x: 0, z: -5000, alt: 1000}, {x: 25000, z: -10000, alt: 1000}, {x: 37500, z: -10000, alt: 1000}
   ]}
 ];
 
@@ -464,7 +464,7 @@ function createZone(data) {
   group.rotation.y = data.angle;
   
   // Runway
-  const rwLength = 50000;
+  const rwLength = 30000;
   const rwGeo = new THREE.PlaneGeometry(800, rwLength);
   const rwMat = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
   const runway = new THREE.Mesh(rwGeo, rwMat);
@@ -474,11 +474,11 @@ function createZone(data) {
   // Centerline (Dashed)
   const dashGeo = new THREE.PlaneGeometry(15, 100);
   const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const instancedDashes = new THREE.InstancedMesh(dashGeo, dashMat, 250);
+  const instancedDashes = new THREE.InstancedMesh(dashGeo, dashMat, 150);
   const dummy = new THREE.Object3D();
   let dashIndex = 0;
   for (let dz = -rwLength/2 + 200; dz < rwLength/2 - 200; dz += 200) {
-    if (dashIndex >= 250) break;
+    if (dashIndex >= 150) break;
     dummy.position.set(0, 0.5, dz);
     dummy.rotation.x = -Math.PI / 2;
     dummy.updateMatrix();
@@ -906,8 +906,8 @@ function update() {
       const lookahead = Math.max(15000, Math.min(40000, Math.abs(alongTrack) * 0.8));
       const targetAlongTrack = alongTrack + lookahead;
       
-      // Target Touchdown Zone exactly 2000 units past threshold (alongTrack = -23000)
-      const distToTDZ = Math.max(0, -alongTrack - 23000);
+      // Target Touchdown Zone exactly 2000 units past threshold (alongTrack = -13000)
+      const distToTDZ = Math.max(0, -alongTrack - 13000);
       const glideTargetAlt = zone.elevation + (distToTDZ / 20000) * 1000;
       
       if (flightSequence === 'CRUISE') {
@@ -1181,7 +1181,7 @@ function update() {
         const sin = Math.sin(z.angle);
         const localX = dx * cos + dz * sin;
         const localZ = -dx * sin + dz * cos;
-        if (Math.abs(localX) < 400 && Math.abs(localZ) < 25000) {
+        if (Math.abs(localX) < 400 && Math.abs(localZ) < 15000) {
           isOnRunway = true;
         }
         break;
@@ -1310,8 +1310,8 @@ function update() {
           // Final Approach - draw boxes along the runway extended centerline
           for (let i = 0; i < 20; i++) {
             const box = approachBoxes[i];
-            const dist = (i + 1) * 4000 + 25000;
-            const yTarget = activeDestination.elevation + Math.max(0, (dist - 23000) / 20000 * 1000);
+            const dist = (i + 1) * 4000 + 15000; // start 15000 from center
+            const yTarget = activeDestination.elevation + Math.max(0, (dist - 13000) / 20000 * 1000);
             box.position.set(
               activeDestination.x - Math.sin(activeDestination.approachAngle) * dist, 
               yTarget, 
