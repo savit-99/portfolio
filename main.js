@@ -1089,17 +1089,11 @@ function update() {
           if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
         } else {
-          // Touchdown: taxi to destination then brake
+          // Touchdown: brake immediately at the touchdown zone
           playerGroup.position.y = zone.elevation; // Force exactly onto ground to trigger RUNWAY surface
-          if (globalAlongTrack < 0) {
-            // Taxi speed 130 kts
-            if (physics.speed < 13.0) physics.speed = Math.min(13.0, physics.speed + 15 * delta);
-            else if (physics.speed > 13.0) physics.speed = Math.max(13.0, physics.speed - 15 * delta);
-          } else {
-            physics.speed = Math.max(0, physics.speed - 15 * delta);
-          }
+          physics.speed = Math.max(0, physics.speed - 15 * delta);
           physics.pitch = 0; // Lock to ground to prevent bounce
-          if (physics.speed < 2 && globalAlongTrack >= 0) {
+          if (physics.speed < 2) {
             autopilotEngaged = false;
             flightSequence = 'NONE';
             btnSeq.textContent = 'INITIATE TAKEOFF';
