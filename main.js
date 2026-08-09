@@ -831,8 +831,8 @@ function update() {
             const dz = pz - b.z;
             const dist = Math.hypot(dx, dz);
             
-            // GPWS proximity check (1500ft radius)
-            if (dist < 1500 && currentAlt < b.h + 200) {
+            // GPWS proximity check (300ft radius)
+            if (dist < 300 && currentAlt < b.h + 200) {
               gpwsWarning = true;
             }
             
