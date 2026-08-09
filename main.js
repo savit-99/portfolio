@@ -252,7 +252,7 @@ const skidPos = new Float32Array(skidCount * 3);
 // Initialize off-screen
 for (let i = 0; i < skidCount * 3; i++) skidPos[i] = -999999;
 skidGeo.setAttribute('position', new THREE.BufferAttribute(skidPos, 3));
-const skidMat = new THREE.PointsMaterial({ color: 0x111111, size: 6 });
+const skidMat = new THREE.PointsMaterial({ color: 0x111111, size: 15, depthWrite: false });
 const skidPoints = new THREE.Points(skidGeo, skidMat);
 scene.add(skidPoints);
 let skidIndex = 0;
@@ -1275,13 +1275,13 @@ function update() {
       
       // Add left skid
       pArr[skidIndex * 3] = leftWheel.x;
-      pArr[skidIndex * 3 + 1] = leftWheel.y + 0.5;
+      pArr[skidIndex * 3 + 1] = groundElevation + 1.5; // Always above surface
       pArr[skidIndex * 3 + 2] = leftWheel.z;
       skidIndex = (skidIndex + 1) % skidCount;
       
       // Add right skid
       pArr[skidIndex * 3] = rightWheel.x;
-      pArr[skidIndex * 3 + 1] = rightWheel.y + 0.5;
+      pArr[skidIndex * 3 + 1] = groundElevation + 1.5;
       pArr[skidIndex * 3 + 2] = rightWheel.z;
       skidIndex = (skidIndex + 1) % skidCount;
       
