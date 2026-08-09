@@ -862,18 +862,13 @@ function update() {
               gpwsWarning = true;
             }
             
-            // Physical collision check
-            if (dist < b.r + 50 && currentAlt < b.h) {
-              crashBuilding = true;
-            }
+            // Physical collision check (Disabled for better UX in isometric view)
+            // if (dist < b.r + 50 && currentAlt < b.h) {
+            //   crashBuilding = true;
+            // }
           }
         }
       }
-    }
-    
-    if (crashBuilding) {
-      triggerCrash();
-      return;
     }
     
     if (gpwsWarning) {
@@ -1137,8 +1132,7 @@ function update() {
     if (physics.speed < 9.0 && currentAlt > groundElevation + 10 && flightSequence !== 'LANDING') {
       stallWarning.classList.remove('hidden');
       physics.pitch -= 1.0 * delta; // Nose drops
-      playerGroup.position.y -= (20 - physics.speed) * delta; // Sink
-      if (physics.speed < 7) physics.roll += 3.0 * delta; // Spin
+      playerGroup.position.y -= (20 - Math.max(0, physics.speed)) * delta; // Sink
     } else {
       stallWarning.classList.add('hidden');
     }
