@@ -809,13 +809,26 @@ function triggerCrash() {
   }, 3000);
 }
 
+// Fast Forward Logic
+let timeScale = 1;
+const ffBtn = document.getElementById('fast-forward-btn');
+if (ffBtn) {
+  ffBtn.addEventListener('click', () => {
+    if (timeScale === 1) timeScale = 2;
+    else if (timeScale === 2) timeScale = 4;
+    else if (timeScale === 4) timeScale = 10;
+    else timeScale = 1;
+    ffBtn.textContent = `⏩ TIME ${timeScale}x`;
+  });
+}
+
 // Main Game Loop
 const clock = new THREE.Clock();
 
 function update() {
   requestAnimationFrame(update);
   
-  const delta = clock.getDelta();
+  const delta = clock.getDelta() * timeScale;
   
   if (!isPaused && !isCrashed) {
     // G Force Calculation
