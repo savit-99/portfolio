@@ -289,9 +289,7 @@ scene.add(particles);
 // Zones Data
 const zonesData = [
   { id: 'start', title: 'START RUNWAY', content: '', x: 0, z: 0, elevation: 0, angle: 0, waypoints: [] },
-  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 50000, z: -80000, elevation: 0, angle: 0, waypoints: [
-      {x: 0, z: -20000, alt: 1000}, {x: 25000, z: -40000, alt: 1000}, {x: 50000, z: -55000, alt: 1000}
-  ]},
+  { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 0, z: -80000, elevation: 0, angle: 0, waypoints: [] },
   { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 0, angle: Math.PI / 4, waypoints: [
       {x: 0, z: -20000, alt: 1000}, {x: -30000, z: -50000, alt: 1000}, {x: -52322, z: -92322, alt: 1000}
   ]},
@@ -986,6 +984,20 @@ function update() {
           targetX = globalTargetX;
           targetZ = globalTargetZ;
           targetAlt = globalTargetAlt;
+          
+          let yawDiffLocal = Math.atan2(-(targetX - playerGroup.position.x), -(targetZ - playerGroup.position.z)) - physics.yaw;
+          yawDiffLocal = Math.atan2(Math.sin(yawDiffLocal), Math.cos(yawDiffLocal));
+          
+          if (Math.abs(yawDiffLocal) < 0.05 && Math.abs(globalCrossTrack) < 500) {
+            flightSequence = 'STABILIZED_APPROACH';
+            if (typeof apIndicator !== 'undefined' && autopilotEngaged) apIndicator.textContent = 'AP: STABILIZED [F]';
+          } else if (globalDistToZone < 15000) {
+            flightSequence = 'LANDING';
+          }
+        } else if (flightSequence === 'STABILIZED_APPROACH') {
+          targetX = globalTargetX;
+          targetZ = globalTargetZ;
+          targetAlt = globalTargetAlt;
           if (globalDistToZone < 15000) flightSequence = 'LANDING';
         } else if (flightSequence === 'LANDING') {
           targetX = globalTargetX;
@@ -1012,14 +1024,13 @@ function update() {
       let yawDiff = reqYaw - physics.yaw;
       yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
       
-      // User's trick: offset the target by 5 degrees (deadband) to prevent overshooting
-      const offset = 5 * Math.PI / 180;
-      if (yawDiff > offset) {
-        yawDiff -= offset;
-      } else if (yawDiff < -offset) {
-        yawDiff += offset;
-      } else {
-        yawDiff = 0;
+      // Hard stop on aircraft's turning when aligned on final approach
+      if (flightSequence === 'STABILIZED_APPROACH' || flightSequence === 'LANDING') {
+        if (Math.abs(yawDiff) < 0.02) {
+          yawDiff = 0;
+          physics.yaw = reqYaw; // Lock perfectly
+          if (Math.abs(physics.roll) < 0.05) physics.roll = 0;
+        }
       }
       
       // AP Bank (Smooth P-Controller to damp oscillation)
@@ -1067,7 +1078,7 @@ function update() {
         physics.speed = Math.min(physics.maxSpeed, Math.max(12.0, physics.speed + 5 * delta));
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
-      } else if (flightSequence === 'APPROACH') {
+      } else if (flightSequence === 'APPROACH' || flightSequence === 'STABILIZED_APPROACH') {
         const targetSpeed = (globalAlongTrack < -35000) ? 50 : 30; // 500 kts until 3000m from threshold, then 300 kts
         physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
         const altDiff = targetAlt - currentAlt;
@@ -1273,7 +1284,7 @@ function update() {
     
     // ATC Logic and Visual Approach Path
     if (activeDestination) {
-      if (flightSequence === 'APPROACH' || flightSequence === 'LANDING' || flightSequence === 'CRUISE') {
+      if (flightSequence === 'APPROACH' || flightSequence === 'LANDING' || flightSequence === 'CRUISE' || flightSequence === 'STABILIZED_APPROACH') {
         approachPathGroup.visible = true;
         
         if (flightSequence === 'CRUISE' && activeDestination.waypoints && currentWaypointIndex < activeDestination.waypoints.length) {
