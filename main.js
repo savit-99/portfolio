@@ -1089,11 +1089,20 @@ function update() {
           if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
         } else {
-          // Touchdown: brake immediately at the touchdown zone
+          // Touchdown: taxi to the end of the runway
           playerGroup.position.y = zone.elevation; // Force exactly onto ground to trigger RUNWAY surface
-          physics.speed = Math.max(0, physics.speed - 15 * delta);
           physics.pitch = 0; // Lock to ground to prevent bounce
-          if (physics.speed < 2) {
+          
+          if (globalAlongTrack < 10000) {
+            // Keep taxiing at 125 kts
+            if (physics.speed < 12.5) physics.speed = Math.min(12.5, physics.speed + 15 * delta);
+            else if (physics.speed > 12.5) physics.speed = Math.max(12.5, physics.speed - 15 * delta);
+          } else {
+            // Brake near the end of the runway
+            physics.speed = Math.max(0, physics.speed - 15 * delta);
+          }
+          
+          if (physics.speed < 2 && globalAlongTrack >= 10000) {
             autopilotEngaged = false;
             flightSequence = 'NONE';
             btnSeq.textContent = 'INITIATE TAKEOFF';
@@ -1129,6 +1138,15 @@ function update() {
       } else {
         if (keys.a) physics.roll += 1.5 * delta;
         if (keys.d) physics.roll -= 1.5 * delta;
+        
+        // Ground Steering & Rudder
+        if (keys.q) physics.yaw += 1.0 * delta;
+        if (keys.e) physics.yaw -= 1.0 * delta;
+        
+        if (playerGroup.position.y <= groundElevation + 1) {
+          if (keys.a) physics.yaw += 1.0 * delta;
+          if (keys.d) physics.yaw -= 1.0 * delta;
+        }
       }
       
       if (keys.w) {
