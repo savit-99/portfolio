@@ -848,6 +848,26 @@ function update() {
     }
     const currentAlt = playerGroup.position.y;
     
+    // Calculate Dynamic Ground Elevation & Runway Surface Detection
+    let groundElevation = 0;
+    isOnRunway = false;
+    for (let z of zonesData) {
+      const dx = playerGroup.position.x - z.x;
+      const dz = playerGroup.position.z - z.z;
+      if (Math.hypot(dx, dz) < 30000) {
+        groundElevation = z.elevation;
+        
+        // Local coordinate check for runway boundaries (800x50000)
+        const cos = Math.cos(z.angle);
+        const sin = Math.sin(z.angle);
+        const localX = dx * cos + dz * sin;
+        const localZ = -dx * sin + dz * cos;
+        if (Math.abs(localX) < 400 && Math.abs(localZ) < 15000) {
+          isOnRunway = true;
+        }
+        break; // Assume only one zone overlap
+      }
+    }
     
     // GPWS & Building Collision Checks
     let gpwsWarning = false;
@@ -1072,19 +1092,19 @@ function update() {
         }
       } else if (flightSequence === 'CRUISE') {
         const targetSpeed = 30.0; // 300 kts
-        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
+        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 30 * delta) : Math.min(targetSpeed, physics.speed + 30 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
       } else if (flightSequence === 'APPROACH' || flightSequence === 'STABILIZED_APPROACH') {
         const targetSpeed = (globalAlongTrack < -35000) ? 30.0 : 21.5; // 300 kts transitioning to 215 kts
-        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 5 * delta) : Math.min(targetSpeed, physics.speed + 5 * delta);
+        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 30 * delta) : Math.min(targetSpeed, physics.speed + 30 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
         if (currentAlt > zone.elevation + 0.5) {
           // Final approach glideslope (150 kts)
-          physics.speed = physics.speed > 15.0 ? Math.max(15.0, physics.speed - 5 * delta) : Math.min(15.0, physics.speed + 5 * delta);
+          physics.speed = physics.speed > 15.0 ? Math.max(15.0, physics.speed - 30 * delta) : Math.min(15.0, physics.speed + 30 * delta);
           let p = altDiff * 0.002;
           if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
@@ -1171,34 +1191,10 @@ function update() {
     physics.pitch = Math.max(-Math.PI/4, Math.min(Math.PI/4, physics.pitch));
     physics.roll = Math.max(-Math.PI/3, Math.min(Math.PI/3, physics.roll));
     
-    // Gravity / Energy Conversion
-    if (!autopilotEngaged) {
-      const gravityAccel = -Math.sin(physics.pitch) * 40.0;
-      physics.speed += gravityAccel * delta;
-    }
+    const gravityAccel = -Math.sin(physics.pitch) * 40.0;
+    physics.speed += gravityAccel * delta;
     const currentMaxSpeed = gearDown ? 35 : physics.maxSpeed;
     physics.speed = Math.max(physics.minSpeed, Math.min(currentMaxSpeed * 1.5, physics.speed));
-    
-    // Calculate Dynamic Ground Elevation & Runway Surface Detection
-    let groundElevation = 0;
-    isOnRunway = false;
-    for (let z of zonesData) {
-      const dx = playerGroup.position.x - z.x;
-      const dz = playerGroup.position.z - z.z;
-      if (Math.hypot(dx, dz) < 30000) {
-        groundElevation = z.elevation;
-        
-        // Local coordinate check for runway boundaries (800x50000)
-        const cos = Math.cos(z.angle);
-        const sin = Math.sin(z.angle);
-        const localX = dx * cos + dz * sin;
-        const localZ = -dx * sin + dz * cos;
-        if (Math.abs(localX) < 400 && Math.abs(localZ) < 15000) {
-          isOnRunway = true;
-        }
-        break;
-      }
-    }
 
     // Stall Warning & Mechanics
     if (physics.speed < 9.0 && currentAlt > groundElevation + 10 && flightSequence !== 'LANDING') {
