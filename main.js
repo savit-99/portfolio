@@ -1164,8 +1164,10 @@ function update() {
     physics.roll = Math.max(-Math.PI/3, Math.min(Math.PI/3, physics.roll));
     
     // Gravity / Energy Conversion
-    const gravityAccel = -Math.sin(physics.pitch) * 40.0;
-    physics.speed += gravityAccel * delta;
+    if (!autopilotEngaged) {
+      const gravityAccel = -Math.sin(physics.pitch) * 40.0;
+      physics.speed += gravityAccel * delta;
+    }
     const currentMaxSpeed = gearDown ? 35 : physics.maxSpeed;
     physics.speed = Math.max(physics.minSpeed, Math.min(currentMaxSpeed * 1.5, physics.speed));
     
