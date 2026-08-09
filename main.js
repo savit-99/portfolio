@@ -1005,14 +1005,14 @@ function update() {
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
       } else if (flightSequence === 'APPROACH') {
-        physics.speed = Math.max(physics.minSpeed + 15, physics.speed - 5 * delta);
+        physics.speed = physics.speed > 30 ? Math.max(30, physics.speed - 5 * delta) : Math.min(30, physics.speed + 5 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
         if (currentAlt > zone.elevation + 3) {
           // Final approach glideslope
-          physics.speed = Math.max(physics.minSpeed + 5, physics.speed - 5 * delta);
+          physics.speed = physics.speed > 25 ? Math.max(25, physics.speed - 5 * delta) : Math.min(25, physics.speed + 5 * delta);
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, altDiff * 0.001));
         } else {
           // Touchdown: taxi to destination then brake
