@@ -897,7 +897,7 @@ function update() {
       const crossTrack = dx * vz - dz * vx;
       globalAlongTrack = alongTrack;
       globalCrossTrack = crossTrack;
-      const lookahead = Math.max(1000, Math.min(20000, Math.abs(alongTrack) * 0.5));
+      const lookahead = Math.max(15000, Math.min(40000, Math.abs(alongTrack) * 0.8));
       if (flightSequence === 'LANDING' && alongTrack > 25000) {
         flightSequence = 'CRUISE';
         if (typeof apIndicator !== 'undefined' && autopilotEngaged) apIndicator.textContent = 'AP: CRUISE [F]';
@@ -1230,7 +1230,7 @@ function update() {
         approachPathGroup.visible = true;
         for (let i = 0; i < 20; i++) {
           const box = approachBoxes[i];
-          const dist = (i + 1) * 2000 + 25000;
+          const dist = (i + 1) * 4000 + 25000;
           const yTarget = activeDestination.elevation + Math.max(0, (dist - 23000) / 20000 * 1000);
           box.position.set(
             activeDestination.x - Math.sin(activeDestination.approachAngle) * dist, 
