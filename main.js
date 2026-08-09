@@ -828,7 +828,7 @@ if (ffBtn) {
     else if (timeScale === 2) timeScale = 4;
     else if (timeScale === 4) timeScale = 10;
     else timeScale = 1;
-    ffBtn.textContent = `⏩ TIME ${timeScale}x`;
+    ffBtn.textContent = `TIME ${timeScale}x`;
   });
 }
 
