@@ -1136,9 +1136,10 @@ function update() {
     playerGroup.rotation.x = physics.pitch;
     playerGroup.rotation.z = physics.roll;
     
-    // Move Forward in the direction it's pointing (1 knot = 1.68781 ft/s, 1 unit = 1 ft)
+    // Move Forward in the direction it's pointing. We use a 4x multiplier for gameplay scaling
+    // so distances are covered faster (1 knot = 1.68781 ft/s * 4 = 6.75)
     const exactKts = physics.speed * 10;
-    playerGroup.translateZ(-exactKts * 1.68781 * delta);
+    playerGroup.translateZ(-exactKts * 6.75 * delta);
     
     // Map & Floor boundaries
     playerGroup.position.x = Math.max(-149900, Math.min(149900, playerGroup.position.x));
@@ -1471,7 +1472,7 @@ function drawDialMarks(dialId, maxVal, sweepAngle, tickStep, labelStep, options 
 }
 
 // Speed: 0 to 750, 270 deg sweep
-drawDialMarks('dial-speed', 750, 270, 30, 150, { offsetAngle: 135 });
+drawDialMarks('dial-speed', 750, 270, 30, 150, { offsetAngle: 225 });
 
 // Heading: 0 to 360, 360 deg sweep
 drawDialMarks('dial-heading', 360, 360, 10, 30, { 
