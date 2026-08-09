@@ -253,7 +253,7 @@ const skidPos = new Float32Array(skidCount * 3);
 // Initialize off-screen
 for (let i = 0; i < skidCount * 3; i++) skidPos[i] = -999999;
 skidGeo.setAttribute('position', new THREE.BufferAttribute(skidPos, 3));
-const skidMat = new THREE.PointsMaterial({ color: 0x111111, size: 15, depthWrite: false });
+const skidMat = new THREE.PointsMaterial({ color: 0x000000, size: 25, depthWrite: false, transparent: true, opacity: 0.8 });
 const skidPoints = new THREE.Points(skidGeo, skidMat);
 scene.add(skidPoints);
 let skidIndex = 0;
@@ -466,7 +466,7 @@ function createZone(data) {
   // Runway
   const rwLength = 30000;
   const rwGeo = new THREE.PlaneGeometry(800, rwLength);
-  const rwMat = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
+  const rwMat = new THREE.MeshBasicMaterial({ color: 0x222222, side: THREE.DoubleSide });
   const runway = new THREE.Mesh(rwGeo, rwMat);
   runway.rotation.x = -Math.PI / 2;
   group.add(runway);
@@ -944,10 +944,6 @@ function update() {
 
     // --- AUTOPILOT LOGIC ---
     if (autopilotEngaged) {
-          activeDestination = z;
-          currentWaypointIndex = 0; // Reset waypoints for the new route
-          flightSequence = (playerGroup.position.y <= 10) ? 'TAKEOFF' : 'CRUISE';
-          if (autopilotEngaged) apIndicator.textContent = 'AP: ' + flightSequence + ' [F]';
       const zone = activeDestination || { x: 0, z: 0, elevation: 0, angle: 0, approachAngle: 0 };
       let targetX, targetZ, targetAlt;
       
@@ -1352,7 +1348,11 @@ function update() {
         atcBox.style.boxShadow = 'var(--glow)';
         
         if (alt <= 5 && physics.speed < 25) {
-          atcBox.innerHTML = `ATC: THROTTLE UP (HOLD SPACE) TO 250 KTS`;
+          if (activeDestination && globalAlongTrack > -15000 && globalAlongTrack < 15000) {
+             atcBox.innerHTML = `ATC: WELCOME TO ${activeDestination.id.toUpperCase()}. BRAKE (SHIFT) TO FULL STOP.`;
+          } else {
+             atcBox.innerHTML = `ATC: THROTTLE UP (HOLD SPACE) TO 250 KTS`;
+          }
         } else if (alt <= 5 && physics.speed >= 25) {
           atcBox.innerHTML = `ATC: ROTATE! PULL UP (HOLD S) TO TAKE OFF`;
         } else if (targetDist > 600) {
