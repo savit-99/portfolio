@@ -433,6 +433,19 @@ forest.instanceMatrix.needsUpdate = true;
 if (forest.instanceColor) forest.instanceColor.needsUpdate = true;
 
 const zoneMeshes = [];
+
+// Visual Approach Path (Pre-defined flight path)
+const approachPathGroup = new THREE.Group();
+const approachBoxes = [];
+const appBoxGeo = new THREE.BoxGeometry(800, 30, 2000);
+const appBoxMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true, transparent: true, opacity: 0.15 });
+for (let i = 0; i < 20; i++) {
+  const box = new THREE.Mesh(appBoxGeo, appBoxMat);
+  approachPathGroup.add(box);
+  approachBoxes.push(box);
+}
+approachPathGroup.visible = false;
+scene.add(approachPathGroup);
 const textCanvas = document.createElement('canvas');
 const textCtx = textCanvas.getContext('2d');
 
@@ -947,17 +960,6 @@ function update() {
       const targetDist = Math.hypot(dx, dz);
       let reqYaw = Math.atan2(-dx, -dz);
       
-      // ILS Localizer Math for Approach/Landing
-      if ((flightSequence === 'APPROACH' || flightSequence === 'LANDING') && activeDestination) {
-        const vx = -Math.sin(activeDestination.approachAngle);
-        const vz = -Math.cos(activeDestination.approachAngle);
-        const dxCenter = playerGroup.position.x - activeDestination.x;
-        const dzCenter = playerGroup.position.z - activeDestination.z;
-        const xtk = -(dxCenter * vz - dzCenter * vx); // Cross-track error
-        const interceptAngle = Math.max(-Math.PI/4, Math.min(Math.PI/4, xtk * 0.005));
-        reqYaw = activeDestination.approachAngle + interceptAngle;
-      }
-      
       let yawDiff = reqYaw - physics.yaw;
       yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
       
@@ -1042,17 +1044,6 @@ function update() {
         const dx = globalTargetX - playerGroup.position.x;
         const dz = globalTargetZ - playerGroup.position.z;
         let reqYaw = Math.atan2(-dx, -dz);
-        
-        // Manual ILS Localizer Math
-        if (activeDestination) {
-          const vx = -Math.sin(activeDestination.approachAngle);
-          const vz = -Math.cos(activeDestination.approachAngle);
-          const dxCenter = playerGroup.position.x - activeDestination.x;
-          const dzCenter = playerGroup.position.z - activeDestination.z;
-          const xtk = -(dxCenter * vz - dzCenter * vx); 
-          const interceptAngle = Math.max(-Math.PI/4, Math.min(Math.PI/4, xtk * 0.005));
-          reqYaw = activeDestination.approachAngle + interceptAngle;
-        }
         
         let yawDiff = reqYaw - physics.yaw;
         yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
@@ -1210,8 +1201,25 @@ function update() {
     if (needleAlt1000) needleAlt1000.style.transform = `rotate(${(alt % 10000) / 10000 * 360}deg)`;
     gforceText.innerText = Math.max(0, currentG).toFixed(1);
     
-    // ATC Logic
+    // ATC Logic and Visual Approach Path
     if (activeDestination) {
+      if (flightSequence === 'APPROACH' || flightSequence === 'LANDING' || flightSequence === 'CRUISE') {
+        approachPathGroup.visible = true;
+        for (let i = 0; i < 20; i++) {
+          const box = approachBoxes[i];
+          const dist = (i + 1) * 2000 + 25000;
+          const yTarget = activeDestination.elevation + Math.max(0, (dist - 23000) / 20000 * 1000);
+          box.position.set(
+            activeDestination.x - Math.sin(activeDestination.approachAngle) * dist, 
+            yTarget, 
+            activeDestination.z - Math.cos(activeDestination.approachAngle) * dist
+          );
+          box.rotation.y = activeDestination.approachAngle;
+        }
+      } else {
+        approachPathGroup.visible = false;
+      }
+      
       const dx = globalTargetX - playerGroup.position.x;
       const dz = globalTargetZ - playerGroup.position.z;
       const targetDist = globalDistToZone;
