@@ -971,21 +971,18 @@ function update() {
       let yawDiff = reqYaw - physics.yaw;
       yawDiff = Math.atan2(Math.sin(yawDiff), Math.cos(yawDiff));
       
-      // AP Bank (PD Controller to damp oscillation)
-      if (typeof window.lastYawDiff === 'undefined') window.lastYawDiff = 0;
-      let yawRate = (yawDiff - window.lastYawDiff) / delta;
-      window.lastYawDiff = yawDiff;
-      
-      const Kp = (flightSequence === 'LANDING') ? 0.5 : ((flightSequence === 'APPROACH') ? 0.8 : 1.5);
-      const Kd = (flightSequence === 'LANDING') ? 0.2 : ((flightSequence === 'APPROACH') ? 0.3 : 0.5);
+      // AP Bank (Smooth P-Controller to damp oscillation)
+      const Kp = (flightSequence === 'LANDING') ? 0.3 : ((flightSequence === 'APPROACH') ? 0.6 : 1.0);
       const maxBank = (flightSequence === 'LANDING') ? Math.PI/12 : ((flightSequence === 'APPROACH') ? Math.PI/8 : Math.PI/4);
 
       if (flightSequence === 'TAKEOFF' || targetDist < 300) {
         physics.roll *= 0.95;
         physics.yaw += yawDiff * 2.0 * delta;
       } else {
-        let desiredRoll = yawDiff * Kp + yawRate * Kd;
-        physics.roll = Math.max(-maxBank, Math.min(maxBank, desiredRoll));
+        let desiredRoll = yawDiff * Kp;
+        desiredRoll = Math.max(-maxBank, Math.min(maxBank, desiredRoll));
+        // Smoothly bank towards desired roll to prevent twitching and overcorrecting
+        physics.roll += (desiredRoll - physics.roll) * 1.5 * delta;
       }
       
       // Auto-deploy gear
@@ -1026,14 +1023,15 @@ function update() {
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
-        if (currentAlt > zone.elevation + 0.1) {
+        if (currentAlt > zone.elevation + 0.5) {
           // Final approach glideslope
           physics.speed = physics.speed > 21.5 ? Math.max(21.5, physics.speed - 5 * delta) : Math.min(21.5, physics.speed + 5 * delta);
           let p = altDiff * 0.002;
-          if (p > -0.005) p = -0.005; // Ensure it doesn't float forever
+          if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
         } else {
           // Touchdown: taxi to destination then brake
+          playerGroup.position.y = zone.elevation; // Force exactly onto ground to trigger RUNWAY surface
           if (globalAlongTrack < 0) {
             if (physics.speed < 10) physics.speed = Math.min(10, physics.speed + 15 * delta);
             else if (physics.speed > 10) physics.speed = Math.max(10, physics.speed - 15 * delta);
