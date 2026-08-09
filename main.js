@@ -289,10 +289,10 @@ scene.add(particles);
 const zonesData = [
   { id: 'start', title: 'START RUNWAY', content: '', x: 0, z: 0, elevation: 0, angle: 0 },
   { id: 'about', title: 'ABOUT_ME.TXT', content: portfolioContent.about, x: 50000, z: -80000, elevation: 0, angle: 0 },
-  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 200, angle: Math.PI / 4 },
+  { id: 'education', title: 'EDUCATION.DAT', content: portfolioContent.education, x: -70000, z: -110000, elevation: 0, angle: Math.PI / 4 },
   { id: 'experience', title: 'WORK_EXPERIENCE.EXE', content: portfolioContent.experience, x: -40000, z: -40000, elevation: 0, angle: Math.PI / 2 },
-  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 90000, z: -100000, elevation: 400, angle: -Math.PI / 4 },
-  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 100000, z: -20000, elevation: 100, angle: -Math.PI / 2 }
+  { id: 'projects', title: 'PROJECTS.BIN', content: portfolioContent.projects, x: 90000, z: -100000, elevation: 0, angle: -Math.PI / 4 },
+  { id: 'skills', title: 'SKILLS_MATRIX.SYS', content: portfolioContent.skills, x: 100000, z: -20000, elevation: 0, angle: -Math.PI / 2 }
 ];
 
 // Global Illumination
@@ -1034,7 +1034,9 @@ function update() {
         if (currentAlt > zone.elevation + 0.1) {
           // Final approach glideslope
           physics.speed = physics.speed > 21.5 ? Math.max(21.5, physics.speed - 5 * delta) : Math.min(21.5, physics.speed + 5 * delta);
-          physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, altDiff * 0.001));
+          let p = altDiff * 0.002;
+          if (p > -0.005) p = -0.005; // Ensure it doesn't float forever
+          physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
         } else {
           // Touchdown: taxi to destination then brake
           if (globalAlongTrack < 0) {
@@ -1173,6 +1175,8 @@ function update() {
       } else {
         playerGroup.position.y = groundElevation;
         physics.pitch = Math.max(0, physics.pitch); // Can't point down if on floor
+        physics.roll *= 0.8; // Flatten wings to prevent clipping into the ground
+        if (Math.abs(physics.roll) < 0.01) physics.roll = 0;
         
         // Manual braking on ground
         if (keys.Shift) physics.speed = Math.max(0, physics.speed - 20 * delta);
