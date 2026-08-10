@@ -1079,8 +1079,15 @@ function update() {
         physics.speed = Math.min(physics.maxSpeed, physics.speed + 20 * delta); // Max thrust
         physics.pitch = Math.PI / 4; // Aggressive climb
       } else if (flightSequence === 'TAKEOFF') {
-        physics.speed = Math.min(physics.maxSpeed, physics.speed + 15 * delta); // Gradual acceleration
-        if (physics.speed > 25) { // Higher Vr rotation speed
+        if (currentAlt < zone.elevation + 2) {
+          // Gradual acceleration during ground roll
+          physics.speed += 2.0 * delta;
+        } else {
+          // Climb thrust
+          physics.speed = Math.min(physics.maxSpeed, physics.speed + 12.0 * delta);
+        }
+        
+        if (physics.speed > 16.0) { // Rotation speed ~160 knots
           const altDiff = targetAlt - currentAlt;
           physics.pitch = Math.max(-Math.PI/16, Math.min(Math.PI/16, altDiff * 0.001)); // Graceful rotation and climb
         } else {
