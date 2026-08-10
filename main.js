@@ -841,11 +841,7 @@ function update() {
   const delta = clock.getDelta() * timeScale;
   
   if (!isPaused && !isCrashed) {
-    // G Force Calculation
-    let currentG = 1.0;
-    if (Math.abs(physics.roll) > 0.05) {
-      currentG = 1.0 / Math.cos(physics.roll);
-    }
+    // G Force Calculation will happen dynamically below
     const currentAlt = playerGroup.position.y;
     
     // Calculate Dynamic Ground Elevation & Runway Surface Detection
@@ -1171,12 +1167,10 @@ function update() {
       
       if (keys.w) {
         physics.pitch -= 1.0 * delta;
-        currentG -= 0.5 + (physics.speed / 50);
       }
       if (keys.s) {
         if (currentAlt > 5 || physics.speed > 14) {
           physics.pitch += 1.0 * delta;
-          currentG += 1.0 + (physics.speed / 14);
         }
       }
       
@@ -1207,6 +1201,21 @@ function update() {
     
     if (physics.speed > 1) {
       physics.yaw += physics.roll * 0.5 * delta;
+    }
+    
+    // G Force Calculation dynamically based on pitch rate
+    if (typeof window.lastPitch === 'undefined') window.lastPitch = physics.pitch;
+    const pitchRate = delta > 0 ? (physics.pitch - window.lastPitch) / delta : 0;
+    window.lastPitch = physics.pitch;
+    
+    let currentG = 1.0;
+    if (Math.abs(physics.roll) > 0.05) {
+      currentG = 1.0 / Math.cos(physics.roll);
+    }
+    if (pitchRate > 0) {
+      currentG += pitchRate * (1.0 + (physics.speed / 14));
+    } else if (pitchRate < 0) {
+      currentG += pitchRate * (0.5 + (physics.speed / 50));
     }
     
     // Update Player Rotation
