@@ -670,10 +670,6 @@ closeBtn.addEventListener('click', () => {
   clock.getDelta(); // Clear accumulated delta
   resetKeys();
   isPaused = false;
-  // Push player slightly forward and up so they don't immediately re-collide
-  physics.speed = 15;
-  physics.pitch = 0.2; 
-  playerGroup.position.y += 50;
 });
 
 // Corner Nav Links (Sets Destination)
@@ -1080,8 +1076,8 @@ function update() {
         physics.pitch = Math.PI / 4; // Aggressive climb
       } else if (flightSequence === 'TAKEOFF') {
         if (currentAlt < zone.elevation + 2) {
-          // Gradual acceleration during ground roll
-          physics.speed += 2.0 * delta;
+          // Gradual acceleration during ground roll (overcoming 5.0 friction)
+          physics.speed += 6.5 * delta;
         } else {
           // Climb thrust
           physics.speed = Math.min(physics.maxSpeed, physics.speed + 12.0 * delta);
