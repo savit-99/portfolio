@@ -1072,15 +1072,15 @@ function update() {
       
       // Speed & Pitch
       if (gpwsWarning && flightSequence !== 'LANDING') {
-        physics.speed = Math.min(physics.maxSpeed, physics.speed + 20 * delta); // Max thrust
+        physics.speed = Math.min(physics.maxSpeed, physics.speed + 10 * delta); // Max thrust
         physics.pitch = Math.PI / 4; // Aggressive climb
       } else if (flightSequence === 'TAKEOFF') {
         if (currentAlt < zone.elevation + 2) {
           // Gradual acceleration during ground roll (overcoming 5.0 friction)
-          physics.speed += 6.5 * delta;
+          physics.speed += 5.75 * delta;
         } else {
           // Climb thrust
-          physics.speed = Math.min(physics.maxSpeed, physics.speed + 12.0 * delta);
+          physics.speed = Math.min(physics.maxSpeed, physics.speed + 6.0 * delta);
         }
         
         if (physics.speed > 16.0) { // Rotation speed ~160 knots
@@ -1091,19 +1091,19 @@ function update() {
         }
       } else if (flightSequence === 'CRUISE') {
         const targetSpeed = 30.0; // 300 kts
-        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 30 * delta) : Math.min(targetSpeed, physics.speed + 30 * delta);
+        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 15 * delta) : Math.min(targetSpeed, physics.speed + 15 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/8, Math.min(Math.PI/8, altDiff * 0.002));
       } else if (flightSequence === 'APPROACH' || flightSequence === 'STABILIZED_APPROACH') {
         const targetSpeed = (globalAlongTrack < -35000) ? 30.0 : 21.5; // 300 kts transitioning to 215 kts
-        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 30 * delta) : Math.min(targetSpeed, physics.speed + 30 * delta);
+        physics.speed = physics.speed > targetSpeed ? Math.max(targetSpeed, physics.speed - 15 * delta) : Math.min(targetSpeed, physics.speed + 15 * delta);
         const altDiff = targetAlt - currentAlt;
         physics.pitch = Math.max(-Math.PI/18, Math.min(Math.PI/18, altDiff * 0.0005)); // Stabilized pitch adjustments
       } else if (flightSequence === 'LANDING') {
         const altDiff = targetAlt - currentAlt;
         if (currentAlt > zone.elevation + 0.5) {
           // Final approach glideslope (150 kts)
-          physics.speed = physics.speed > 15.0 ? Math.max(15.0, physics.speed - 30 * delta) : Math.min(15.0, physics.speed + 30 * delta);
+          physics.speed = physics.speed > 15.0 ? Math.max(15.0, physics.speed - 15 * delta) : Math.min(15.0, physics.speed + 15 * delta);
           let p = altDiff * 0.002;
           if (p > -0.01) p = -0.01; // Ensure a firm touchdown descent
           physics.pitch = Math.max(-Math.PI/24, Math.min(Math.PI/24, p));
@@ -1114,8 +1114,8 @@ function update() {
           
           if (globalAlongTrack < 10000) {
             // Keep taxiing at 125 kts
-            if (physics.speed < 12.5) physics.speed = Math.min(12.5, physics.speed + 15 * delta);
-            else if (physics.speed > 12.5) physics.speed = Math.max(12.5, physics.speed - 15 * delta);
+            if (physics.speed < 12.5) physics.speed = Math.min(12.5, physics.speed + 7.5 * delta);
+            else if (physics.speed > 12.5) physics.speed = Math.max(12.5, physics.speed - 7.5 * delta);
           } else {
             // Brake near the end of the runway
             physics.speed = Math.max(0, physics.speed - 15 * delta);
@@ -1177,8 +1177,8 @@ function update() {
         }
       }
       
-      if (keys[' ']) physics.speed = Math.min(currentMaxSpeed, physics.speed + 10 * delta);
-      if (keys.Shift) physics.speed = Math.max(physics.minSpeed, physics.speed - 10 * delta);
+      if (keys[' ']) physics.speed = Math.min(currentMaxSpeed, physics.speed + 5 * delta);
+      if (keys.Shift) physics.speed = Math.max(physics.minSpeed, physics.speed - 5 * delta);
       
       if (!keys.w && !keys.s) physics.pitch *= 0.98;
       if (!keys.a && !keys.d) physics.roll *= 0.98;
