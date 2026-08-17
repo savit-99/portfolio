@@ -23,6 +23,9 @@
       <div id="intro-screen">
         <h1>PORTFOLIO_SYSTEM.EXE</h1>
         <p>AWAITING PILOT INPUT...</p>
+        <div id="mobile-warning" style="display: none; color: #ffaa00; font-family: 'Courier New', monospace; font-size: 0.9em; max-width: 80%; text-align: center; margin-top: 15px; border: 1px dashed #ffaa00; padding: 10px;">
+          ⚠ MOBILE DETECTED: PLEASE ZOOM OUT TO THE MAXIMUM LEVEL FOR THE BEST FLIGHT EXPERIENCE.
+        </div>
         <div class="mode-select" style="display: flex; gap: 20px; margin-top: 30px;">
           <button id="btn-static" class="mission-btn">STANDARD PORTFOLIO</button>
           <button id="btn-fly" class="mission-btn" style="color: #00ffff; border-color: #00ffff; box-shadow: 0 0 10px #00ffff;">LET US FLY CAPTAIN!!</button>
@@ -131,5 +134,11 @@
     </div>
     
     <script type="module" src="/main.js"></script>
+    <script>
+      // Display mobile warning if screen is small
+      if (window.innerWidth < 768) {
+        document.getElementById('mobile-warning').style.display = 'block';
+      }
+    </script>
   </body>
 </html>

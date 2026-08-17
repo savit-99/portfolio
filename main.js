@@ -134,6 +134,15 @@ btnApToggle.addEventListener('click', () => {
   }
 });
 
+if (apIndicator) {
+  apIndicator.style.cursor = 'pointer';
+  apIndicator.addEventListener('click', () => {
+    if (!isPaused && !isCrashed) {
+      toggleAutopilot();
+    }
+  });
+}
+
 function toggleAutopilot() {
   autopilotEngaged = !autopilotEngaged;
   
@@ -153,11 +162,15 @@ function toggleAutopilot() {
     localizerEngaged = false;
     locIndicator.textContent = 'LOC: OFF [L]';
     locIndicator.classList.remove('ap-on');
+    apIndicator.textContent = 'AP: ON [F]';
+    apIndicator.classList.add('ap-on');
     flightControls.style.display = 'none';
     for (let k in keys) keys[k] = false;
   } else {
     flightSequence = 'NONE';
     btnSeq.textContent = 'INITIATE ' + (playerGroup.position.y <= 10 ? 'TAKEOFF' : 'LANDING');
+    apIndicator.textContent = 'AP: OFF [F]';
+    apIndicator.classList.remove('ap-on');
     flightControls.style.display = 'block';
   }
 }
@@ -806,6 +819,16 @@ function triggerCrash() {
     isCrashed = false;
     flightSequence = 'NONE';
     autopilotEngaged = false;
+    if (typeof apIndicator !== 'undefined') {
+      apIndicator.textContent = 'AP: OFF [F]';
+      apIndicator.classList.remove('ap-on');
+    }
+    if (typeof btnApToggle !== 'undefined') {
+      btnApToggle.textContent = 'OFF';
+      btnApToggle.classList.remove('active');
+    }
+    if (typeof btnSeq !== 'undefined') btnSeq.textContent = 'INITIATE TAKEOFF';
+    if (typeof flightControls !== 'undefined') flightControls.style.display = 'block';
     crashScreen.classList.add('hidden');
     destCue.classList.remove('hidden');
     if (activeDestination) {
@@ -1123,6 +1146,9 @@ function update() {
             flightSequence = 'NONE';
             btnSeq.textContent = 'INITIATE TAKEOFF';
             apIndicator.textContent = 'AP: OFF [F]';
+            apIndicator.classList.remove('ap-on');
+            btnApToggle.textContent = 'OFF';
+            btnApToggle.classList.remove('active');
             flightControls.style.display = 'block';
           }
         }
